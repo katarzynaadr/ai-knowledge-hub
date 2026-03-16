@@ -1,0 +1,23 @@
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+  
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-knowledge-hub-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - opensearch
+    environment:
+      - OPENSEARCH_HOST=http://opensearch:9200

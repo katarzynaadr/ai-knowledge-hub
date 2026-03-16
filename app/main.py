@@ -1,13 +1,22 @@
 from fastapi import FastAPI
 
 from app.api import router as api_router
+from app.core.config import get_settings
+from app.core.opensearch_client import ensure_index
 
 
 def create_app() -> FastAPI:
+    settings = get_settings()
+
     app = FastAPI(
-        title="AI Knowledge Hub - Minimal RAG",
+        title=settings.app_name,
         version="0.1.0",
     )
+
+    @app.on_event("startup")
+    async def on_startup() -> None:
+        # Ensure the OpenSearch index exists before handling requests.
+        ensure_index()
 
     app.include_router(api_router, prefix="/api")
 

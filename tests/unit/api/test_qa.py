@@ -64,7 +64,9 @@ def test_query_qa_with_empty_results(
 
     assert response.status_code == 200
     data = response.json()
-    assert data["answer"]  # LLM still generates answer (e.g. "context does not contain")
+    assert data[
+        "answer"
+    ]  # LLM still generates answer (e.g. "context does not contain")
     assert data["contexts"] == []
 
 
@@ -88,7 +90,9 @@ def test_query_qa_passes_top_k_to_search(
     )
 
     call_args = patch_opensearch_client.search.call_args
-    search_body = call_args.kwargs.get("body", call_args.args[1] if len(call_args.args) > 1 else {})
+    search_body = call_args.kwargs.get(
+        "body", call_args.args[1] if len(call_args.args) > 1 else {}
+    )
     assert search_body.get("size") == 10
     assert search_body["query"]["knn"]["embedding"]["k"] == 10
 

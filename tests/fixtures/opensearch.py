@@ -28,7 +28,10 @@ def mock_opensearch_client():
 def patch_opensearch_client(mock_opensearch_client):
     """Patch get_opensearch_client in API modules (ingestion, qa)."""
     with (
-        patch("app.api.ingestion.get_opensearch_client", return_value=mock_opensearch_client),
+        patch(
+            "app.api.ingestion.get_opensearch_client",
+            return_value=mock_opensearch_client,
+        ),
         patch("app.api.qa.get_opensearch_client", return_value=mock_opensearch_client),
     ):
         yield mock_opensearch_client

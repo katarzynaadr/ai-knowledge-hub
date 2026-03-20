@@ -1,7 +1,8 @@
 """Unit tests for app.core.llm_client."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.core.llm_client import generate_answer, get_embedding
 
@@ -31,7 +32,9 @@ async def test_get_embedding_returns_vector(mock_settings, override_settings):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_get_embedding_raises_for_unsupported_provider(mock_settings, override_settings):
+async def test_get_embedding_raises_for_unsupported_provider(
+    mock_settings, override_settings
+):
     """get_embedding raises ValueError for unsupported provider."""
     mock_settings.llm_provider = "unsupported_provider"
 
@@ -62,7 +65,9 @@ async def test_generate_answer_returns_string(mock_settings, override_settings):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_generate_answer_includes_context_in_prompt(mock_settings, override_settings):
+async def test_generate_answer_includes_context_in_prompt(
+    mock_settings, override_settings
+):
     """generate_answer sends context in the prompt to Ollama."""
     mock_response = {"response": "Answer"}
 
@@ -87,7 +92,9 @@ async def test_generate_answer_includes_context_in_prompt(mock_settings, overrid
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_generate_answer_raises_for_unsupported_provider(mock_settings, override_settings):
+async def test_generate_answer_raises_for_unsupported_provider(
+    mock_settings, override_settings
+):
     """generate_answer raises ValueError for unsupported provider."""
     mock_settings.llm_provider = "unknown"
 

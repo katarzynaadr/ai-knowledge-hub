@@ -3,9 +3,8 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from opensearchpy import AuthorizationException
+from opensearchpy import AuthorizationException, OpenSearch, RequestsHttpConnection
 from opensearchpy import ConnectionError as OpenSearchConnectionError
-from opensearchpy import OpenSearch, RequestsHttpConnection
 
 from app.core.config import get_settings
 

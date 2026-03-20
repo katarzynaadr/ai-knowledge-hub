@@ -34,11 +34,7 @@ async def generate_answer(query: str, contexts: Sequence[str]) -> str:
     prompt = (
         "Answer the question using only the context below. "
         "If the context does not contain the answer, say so.\n\n"
-        "Context:\n"
-        + "\n\n".join(contexts)
-        + "\n\nQuestion: "
-        + query
-        + "\n\nAnswer:"
+        "Context:\n" + "\n\n".join(contexts) + "\n\nQuestion: " + query + "\n\nAnswer:"
     )
 
     if settings.llm_provider == "ollama":

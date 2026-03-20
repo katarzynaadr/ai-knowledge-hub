@@ -16,6 +16,7 @@ def test_get_opensearch_client_returns_client(mock_settings, override_settings):
 
         # Reset global to ensure we get fresh client
         import app.core.opensearch_client as opensearch_module
+
         opensearch_module._client = None
 
         client = get_opensearch_client()
@@ -32,6 +33,7 @@ def test_get_opensearch_client_is_singleton(mock_settings, override_settings):
         mock_opensearch_cls.return_value = mock_client
 
         import app.core.opensearch_client as opensearch_module
+
         opensearch_module._client = None
 
         client1 = get_opensearch_client()
@@ -42,7 +44,9 @@ def test_get_opensearch_client_is_singleton(mock_settings, override_settings):
 
 
 @pytest.mark.unit
-def test_get_opensearch_client_uses_auth_when_credentials_provided(mock_settings, override_settings):
+def test_get_opensearch_client_uses_auth_when_credentials_provided(
+    mock_settings, override_settings
+):
     """get_opensearch_client passes auth tuple when username/password are set."""
     mock_settings.opensearch_username = "user"
     mock_settings.opensearch_password = "pass"

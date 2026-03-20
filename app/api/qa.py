@@ -3,6 +3,9 @@ from time import perf_counter
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.config import get_settings
+from app.core.llm_client import generate_answer, get_embedding
+from app.core.opensearch_client import get_opensearch_client
 
 router = APIRouter()
 
@@ -33,21 +36,50 @@ class QAResponse(BaseModel):
 
 @router.post("/query", response_model=QAResponse)
 async def query_qa(payload: QARequest) -> QAResponse:
-    """
-    Minimal stub for QA endpoint.
-
-    For now it returns a canned answer and empty contexts.
-    """
     start_total = perf_counter()
 
-    # TODO: implement real query embedding and OpenSearch retrieval
+    settings = get_settings()
+    client = get_opensearch_client()
+
+    # Embed query
+    query_embedding = await get_embedding(payload.query)
+
+    # Vector search in OpenSearch (using knn search API)
     start_retrieval = perf_counter()
+    search_body = {
+        "size": payload.top_k,
+        "query": {
+            "knn": {
+                "embedding": {
+                    "vector": query_embedding,
+                    "k": payload.top_k,
+                }
+            }
+        },
+    }
+    search_resp = client.search(index=settings.opensearch_index, body=search_body)
+
     contexts: list[RetrievedContext] = []
+    context_texts: list[str] = []
+
+    hits = search_resp.get("hits", {}).get("hits", []) or []
+    for hit in hits:
+        source = hit.get("_source", {})
+        score = float(hit.get("_score") or 0.0)
+        ctx = RetrievedContext(
+            doc_id=str(source.get("doc_id", "")),
+            chunk_index=int(source.get("chunk_index", 0)),
+            score=score,
+            text=str(source.get("text", "")),
+        )
+        contexts.append(ctx)
+        context_texts.append(ctx.text)
+
     latency_retrieval_ms = (perf_counter() - start_retrieval) * 1000
 
-    # TODO: implement real LLM call for answer synthesis
+    # LLM answer synthesis
     start_llm = perf_counter()
-    answer = f"(stub) No documents yet, but you asked: {payload.query!r}"
+    answer = await generate_answer(payload.query, context_texts)
     latency_llm_ms = (perf_counter() - start_llm) * 1000
 
     latency_total_ms = (perf_counter() - start_total) * 1000
@@ -59,4 +91,3 @@ async def query_qa(payload: QARequest) -> QAResponse:
     )
 
     return QAResponse(answer=answer, contexts=contexts, metrics=metrics)
-

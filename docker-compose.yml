@@ -1,0 +1,40 @@
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-knowledge-hub-api
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - opensearch
+      - ollama
+    environment:
+      - OPENSEARCH_HOST=http://opensearch:9200
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL=llama3.2:3b
+
+volumes:
+  ollama_data:

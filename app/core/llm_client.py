@@ -8,38 +8,56 @@ from app.core.config import get_settings
 
 
 async def get_embedding(text: str) -> list[float]:
-    """
-    Return an embedding vector for the given text.
-
-    For now this is a stub you can implement against OpenAI or Gemini later.
-    """
     settings = get_settings()
 
-    # Example placeholder: raise if not configured
-    if settings.llm_provider not in {"openai", "gemini"}:
-        raise ValueError(f"Unsupported provider: {settings.llm_provider}")
+    if settings.llm_provider == "ollama":
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            r = await client.post(
+                f"{settings.ollama_base_url.rstrip('/')}/api/embeddings",
+                json={"model": settings.embedding_model, "prompt": text},
+            )
+            r.raise_for_status()
+            data = r.json()
+            return data["embedding"]
 
-    # TODO: implement real HTTP call to provider's embedding endpoint
-    # For now, return a fake fixed-dimension vector for wiring.
-    dim = 1536
-    return [0.0] * dim
+    if settings.llm_provider in {"openai", "gemini"}:
+        raise NotImplementedError(
+            f"Provider {settings.llm_provider} not implemented; use ollama for local."
+        )
+
+    raise ValueError(f"Unsupported provider: {settings.llm_provider}")
 
 
 async def generate_answer(query: str, contexts: Sequence[str]) -> str:
-    """
-    Call the LLM to generate an answer based on the query and retrieved contexts.
-    """
     settings = get_settings()
 
-    # Simple prompt template
     prompt = (
-        "You are a helpful assistant answering questions based on the provided context.\n\n"
-        "Context:\n" + "\n\n".join(contexts) + "\n\nQuestion:\n" + query + "\n\nAnswer:"
+        "Answer the question using only the context below. "
+        "If the context does not contain the answer, say so.\n\n"
+        "Context:\n"
+        + "\n\n".join(contexts)
+        + "\n\nQuestion: "
+        + query
+        + "\n\nAnswer:"
     )
 
-    # TODO: implement real call to OpenAI or Gemini; example shape:
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        _ = client  # placeholder to avoid unused variable
+    if settings.llm_provider == "ollama":
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            r = await client.post(
+                f"{settings.ollama_base_url.rstrip('/')}/api/generate",
+                json={
+                    "model": settings.llm_model,
+                    "prompt": prompt,
+                    "stream": False,
+                },
+            )
+            r.raise_for_status()
+            data = r.json()
+            return data.get("response", "").strip()
 
-    # Stubbed answer for now
-    return f"(stubbed answer) You asked: {query!r} with {len(contexts)} context chunks."
+    if settings.llm_provider in {"openai", "gemini"}:
+        raise NotImplementedError(
+            f"Provider {settings.llm_provider} not implemented; use ollama for local."
+        )
+
+    raise ValueError(f"Unsupported provider: {settings.llm_provider}")

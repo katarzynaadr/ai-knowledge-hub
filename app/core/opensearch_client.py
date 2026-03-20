@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
+from opensearchpy import AuthorizationException
 from opensearchpy import ConnectionError as OpenSearchConnectionError
 from opensearchpy import OpenSearch, RequestsHttpConnection
 
@@ -32,14 +33,23 @@ def get_opensearch_client() -> OpenSearch:
     return _client
 
 
-def ensure_index(retries: int = 10, delay_seconds: float = 2.0) -> None:
-    """
-    Ensure the RAG index exists with a dense_vector field.
+def _relax_disk_watermarks(client: OpenSearch) -> None:
+    """Raise disk watermarks so Docker dev environments don't block index creation."""
+    try:
+        client.cluster.put_settings(
+            body={
+                "persistent": {
+                    "cluster.routing.allocation.disk.watermark.low": "99%",
+                    "cluster.routing.allocation.disk.watermark.high": "99%",
+                    "cluster.routing.allocation.disk.watermark.flood_stage": "99%",
+                }
+            }
+        )
+    except Exception:
+        pass
 
-    Retries a few times to allow OpenSearch to start up,
-    which is important in Docker Compose where the API
-    container may come up before OpenSearch is ready.
-    """
+
+def ensure_index(retries: int = 10, delay_seconds: float = 2.0) -> None:
     settings = get_settings()
     index_name = settings.opensearch_index
 
@@ -48,6 +58,8 @@ def ensure_index(retries: int = 10, delay_seconds: float = 2.0) -> None:
     for _ in range(retries):
         client = get_opensearch_client()
         try:
+            _relax_disk_watermarks(client)
+
             if client.indices.exists(index=index_name):
                 return
 
@@ -64,14 +76,14 @@ def ensure_index(retries: int = 10, delay_seconds: float = 2.0) -> None:
                         "text": {"type": "text"},
                         "embedding": {
                             "type": "knn_vector",
-                            "dimension": 1536,  # match your embedding model
+                            "dimension": settings.embedding_dimension,
                         },
                     }
                 },
             }
             client.indices.create(index=index_name, body=body)
             return
-        except OpenSearchConnectionError as exc:
+        except (OpenSearchConnectionError, AuthorizationException) as exc:
             last_exc = exc
             time.sleep(delay_seconds)
 

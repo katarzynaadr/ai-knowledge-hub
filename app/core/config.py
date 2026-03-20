@@ -14,9 +14,11 @@ class Settings(BaseSettings):
     opensearch_index: str = Field("rag_chunks", alias="OPENSEARCH_INDEX")
 
     # Embeddings / LLM
-    embedding_model: str = Field("text-embedding-3-small", alias="EMBEDDING_MODEL")
-    llm_model: str = Field("gpt-4.1-mini", alias="LLM_MODEL")
-    llm_provider: str = Field("openai", alias="LLM_PROVIDER")  # or "gemini"
+    embedding_model: str = Field("nomic-embed-text", alias="EMBEDDING_MODEL")
+    llm_model: str = Field("llama3.2:3b", alias="LLM_MODEL")
+    llm_provider: str = Field("ollama", alias="LLM_PROVIDER")
+    embedding_dimension: int = Field(768, alias="EMBEDDING_DIMENSION")
+    ollama_base_url: str = Field("http://localhost:11434", alias="OLLAMA_BASE_URL")
     openai_api_key: str | None = Field(None, alias="OPENAI_API_KEY")
     gemini_api_key: str | None = Field(None, alias="GEMINI_API_KEY")
 

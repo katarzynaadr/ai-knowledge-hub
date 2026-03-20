@@ -1,8 +1,17 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from app.api import router as api_router
 from app.core.config import get_settings
 from app.core.opensearch_client import ensure_index
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001
+    ensure_index()
+    yield
 
 
 def create_app() -> FastAPI:
@@ -11,16 +20,13 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version="0.1.0",
+        lifespan=lifespan,
     )
-
-    @app.on_event("startup")
-    async def on_startup() -> None:
-        ensure_index()
 
     app.include_router(api_router, prefix="/api")
 
     @app.get("/health")
-    async def health() -> dict:
+    async def health() -> dict[str, str]:
         return {"status": "ok"}
 
     return app

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Sequence, cast
 
 import httpx
 
@@ -18,7 +18,7 @@ async def get_embedding(text: str) -> list[float]:
             )
             r.raise_for_status()
             data = r.json()
-            return data["embedding"]
+            return cast(list[float], data["embedding"])
 
     if settings.llm_provider in {"openai", "gemini"}:
         raise NotImplementedError(
@@ -53,7 +53,7 @@ async def generate_answer(query: str, contexts: Sequence[str]) -> str:
             )
             r.raise_for_status()
             data = r.json()
-            return data.get("response", "").strip()
+            return cast(str, data.get("response", "").strip())
 
     if settings.llm_provider in {"openai", "gemini"}:
         raise NotImplementedError(

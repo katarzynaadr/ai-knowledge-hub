@@ -20,9 +20,13 @@ dependencies = [
 dev = [
     "black (>=26.3.0,<27.0.0)",
     "pytest (>=9.0.2,<10.0.0)",
+    "pytest-asyncio (>=1.0.0,<2.0.0)",
+    "pytest-cov (>=6.0.0,<7.0.0)",
     "isort (>=8.0.1,<9.0.0)"
 ]
 
+[project.scripts]
+tests = "pytest:main"
 
 [tool.poetry]
 packages = [
@@ -32,3 +36,31 @@ packages = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "-ra",
+]
+markers = [
+    "unit: Unit tests (fast, no external services)",
+    "integration: Integration tests (require external services)",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = ["app/__init__.py", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]

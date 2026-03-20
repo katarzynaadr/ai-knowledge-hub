@@ -1,3 +1,6 @@
 .python-version
 .vscode/
 .env
+.coverage
+htmlcov/
+__pycache__/

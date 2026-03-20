@@ -1,8 +1,9 @@
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     # General
     app_name: str = "AI Knowledge Hub - Minimal RAG"
     env: str = "local"
@@ -21,10 +22,6 @@ class Settings(BaseSettings):
     ollama_base_url: str = Field("http://localhost:11434", alias="OLLAMA_BASE_URL")
     openai_api_key: str | None = Field(None, alias="OPENAI_API_KEY")
     gemini_api_key: str | None = Field(None, alias="GEMINI_API_KEY")
-
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
 
 
 _settings: Settings | None = None

@@ -24,9 +24,6 @@ class IngestionResult(BaseModel):
 
 
 def _simple_chunk(text: str, max_chars: int = 1000, overlap: int = 200) -> List[str]:
-    """
-    Very simple character-based chunker to keep week-1 logic minimal.
-    """
     chunks: List[str] = []
     start = 0
     length = len(text)
@@ -43,12 +40,6 @@ def _simple_chunk(text: str, max_chars: int = 1000, overlap: int = 200) -> List[
 
 @router.post("/text", response_model=IngestionResult)
 async def ingest_text_document(payload: TextDocumentIn) -> IngestionResult:
-    """
-    Text ingestion pipeline:
-    - chunk text
-    - embed each chunk
-    - store in OpenSearch with basic metadata
-    """
     start = perf_counter()
 
     settings = get_settings()
@@ -76,12 +67,6 @@ async def ingest_text_document(payload: TextDocumentIn) -> IngestionResult:
 
 @router.post("/file", response_model=IngestionResult)
 async def ingest_file_document(file: UploadFile = File(...)) -> IngestionResult:
-    """
-    File ingestion pipeline (week-1 version):
-    - read bytes
-    - treat as UTF-8 text (placeholder for real PDF parsing)
-    - reuse text ingestion logic
-    """
     raw_bytes = await file.read()
     text = raw_bytes.decode("utf-8", errors="ignore")
 

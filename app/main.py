@@ -15,7 +15,6 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     async def on_startup() -> None:
-        # Ensure the OpenSearch index exists before handling requests.
         ensure_index()
 
     app.include_router(api_router, prefix="/api")

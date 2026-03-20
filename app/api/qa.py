@@ -36,12 +36,6 @@ class QAResponse(BaseModel):
 
 @router.post("/query", response_model=QAResponse)
 async def query_qa(payload: QARequest) -> QAResponse:
-    """
-    End-to-end QA:
-    - embed query
-    - retrieve top-k chunks from OpenSearch
-    - call LLM to synthesize an answer
-    """
     start_total = perf_counter()
 
     settings = get_settings()
